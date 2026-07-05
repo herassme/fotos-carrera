@@ -131,12 +131,21 @@ app.get('/api/photos', async (req, res) => {
 app.post('/api/admin/sync', requireAdmin, async (req, res) => {
   try {
     const cursor = req.query.cursor || undefined;
-    const result = await cloudinary.api.resources({
-      type: 'upload',
-      prefix: CLOUDINARY_FOLDER + '/',
-      max_results: 100,
-      next_cursor: cursor,
-    });
+    // Busca por carpeta dinamica (dynamic folders) y si no, por prefijo clasico
+    let result;
+    try {
+      result = await cloudinary.api.resources_by_asset_folder(CLOUDINARY_FOLDER, { max_results: 100, next_cursor: cursor });
+    } catch (err) {
+      result = { resources: [] };
+    }
+    if (!result.resources.length && !cursor) {
+      result = await cloudinary.api.resources({
+        type: 'upload',
+        prefix: CLOUDINARY_FOLDER + '/',
+        max_results: 100,
+        next_cursor: cursor,
+      });
+    }
     let nuevas = 0;
     for (const r of result.resources) {
       const upserted = await Photo.updateOne(
