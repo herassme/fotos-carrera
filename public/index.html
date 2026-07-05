@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Encuentra tus fotos · Carrera</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:#0C1B45; --ink-2:#13285E; --line:rgba(255,255,255,.10);
+    --sun:#2E9BE0; --sun-2:#5FB9EF; --sky:#8FD0FF; --rojo:#E8354D;
+    --paper:#F6F3EC; --text:#EDF2FA; --muted:#9AAAC8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  html,body{background:var(--ink);color:var(--text);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  body{
+    min-height:100dvh;
+    background:
+      radial-gradient(120% 80% at 50% 108%, rgba(46,155,224,.30) 0%, rgba(46,155,224,0) 55%),
+      radial-gradient(90% 60% at 50% -10%, rgba(232,53,77,.10) 0%, rgba(232,53,77,0) 60%),
+      var(--ink);
+    background-attachment:fixed;
+  }
+  .wrap{max-width:960px;margin:0 auto;padding:28px 20px 64px;padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+  /* ---------- Encabezado ---------- */
+  .eyebrow{font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--sky);font-weight:600}
+  .hero h1{font-family:Anton,sans-serif;font-weight:400;line-height:.92;letter-spacing:-.01em;
+    font-size:clamp(38px,11vw,76px);margin:10px 0 6px;text-transform:uppercase}
+  .hero h1 span{color:var(--sun)}
+  .hero p{color:var(--muted);max-width:34ch;font-size:15px;line-height:1.5}
+  /* ---------- Dorsal (elemento firma) ---------- */
+  .bib{position:relative;background:var(--paper);color:#15161c;border-radius:14px;
+    padding:18px 18px 20px;margin:26px 0 10px;box-shadow:0 24px 60px -24px rgba(0,0,0,.7);}
+  .bib::before,.bib::after,.bib i::before,.bib i::after{content:"";position:absolute;width:9px;height:9px;
+    border-radius:50%;background:#c9c5b8;box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}
+  .bib::before{top:11px;left:11px}.bib::after{top:11px;right:11px}
+  .bib i::before{bottom:11px;left:11px}.bib i::after{bottom:11px;right:11px}
+  .bib-top{display:flex;justify-content:space-between;align-items:center;
+    font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:#7a776c;font-weight:700;padding:0 10px}
+  .bib-top span:last-child{color:var(--rojo)}
+  .bib-date{text-align:center;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;
+    color:#9a9488;font-weight:700;margin-top:8px}
+  .bib-field{display:flex;align-items:center;gap:10px;margin-top:2px;padding:0 6px}
+  .bib-field input{flex:1;width:100%;border:none;outline:none;background:transparent;color:#111;
+    font-family:Anton,sans-serif;font-size:clamp(44px,15vw,86px);text-align:center;letter-spacing:.04em}
+  .bib-field input::placeholder{color:#cfccc0}
+  .go{border:none;cursor:pointer;background:var(--sun);color:#fff;font-weight:700;font-size:15px;
+    border-radius:10px;padding:14px 18px;letter-spacing:.02em;transition:transform .12s ease,background .12s ease;width:100%;margin-top:12px}
+  .go:hover{background:var(--sun-2)}
+  .go:active{transform:translateY(1px)}
+  .hint{color:var(--muted);font-size:13px;margin-top:14px;text-align:center}
+  .hint a{color:var(--sky);text-decoration:none;border-bottom:1px solid rgba(143,208,255,.4)}
+  /* ---------- Resultados ---------- */
+  .status{margin:26px 0 14px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .status h2{font-family:Anton,sans-serif;font-weight:400;font-size:26px;text-transform:uppercase;letter-spacing:.01em}
+  .status .n{color:var(--sun)}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  @media(min-width:620px){.grid{grid-template-columns:repeat(3,1fr)}}
+  .card{position:relative;border-radius:12px;overflow:hidden;background:var(--ink-2);
+    border:1px solid var(--line);aspect-ratio:1;cursor:pointer;opacity:0;transform:translateY(10px);
+    animation:rise .5s forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .card img{width:100%;height:100%;object-fit:cover;display:block}
+  .card .tag{position:absolute;left:8px;bottom:8px;background:rgba(12,27,69,.85);
+    color:#fff;font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;letter-spacing:.02em}
+  .empty{border:1px dashed var(--line);border-radius:14px;padding:30px 22px;text-align:center;color:var(--muted)}
+  .empty b{color:var(--text);display:block;margin-bottom:6px;font-size:16px}
+  .link-btn{background:none;border:none;color:var(--sky);font:inherit;cursor:pointer;text-decoration:underline;padding:0}
+  .more{display:block;margin:22px auto 0;border:1px solid var(--line);background:var(--ink-2);
+    color:var(--text);border-radius:10px;padding:13px 22px;font-weight:600;cursor:pointer}
+  /* ---------- Lightbox ---------- */
+  .lb{position:fixed;inset:0;background:rgba(4,9,26,.94);display:none;align-items:center;justify-content:center;
+    padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom));z-index:50;flex-direction:column;gap:14px}
+  .lb.open{display:flex}
+  .lb img{max-width:100%;max-height:66vh;border-radius:12px;object-fit:contain}
+  .lb .buy{background:#25D366;color:#04310f;border:none;border-radius:12px;padding:16px 22px;font-weight:700;
+    font-size:16px;cursor:pointer;display:inline-flex;align-items:center;gap:10px;width:min(420px,100%);justify-content:center}
+  .lb .price{color:var(--muted);font-size:13px;text-align:center}
+  .lb .price b{color:var(--text)}
+  .lb .x{position:absolute;top:14px;right:16px;background:rgba(255,255,255,.1);border:none;color:#fff;
+    width:42px;height:42px;border-radius:50%;font-size:22px;cursor:pointer;line-height:1}
+  .foot{margin-top:40px;color:var(--muted);font-size:12px;text-align:center;line-height:1.7}
+  /* ---------- Logo · vidrio líquido (Apple Liquid Glass) ---------- */
+  .brand{display:flex;justify-content:center;margin:4px 0 22px}
+  .logo-glass{
+    position:relative;width:clamp(128px,34vw,168px);aspect-ratio:1;border-radius:50%;
+    display:grid;place-items:center;padding:14px;
+    background:
+      radial-gradient(120% 120% at 30% 22%, rgba(255,255,255,.55), rgba(255,255,255,.06) 42%, rgba(255,255,255,0) 60%),
+      linear-gradient(160deg, rgba(255,255,255,.22), rgba(255,255,255,.04));
+    -webkit-backdrop-filter:blur(14px) saturate(180%);
+    backdrop-filter:blur(14px) saturate(180%);
+    border:1px solid rgba(255,255,255,.45);
+    box-shadow:
+      0 22px 50px -18px rgba(4,6,20,.75),          /* sombra flotante */
+      0 0 46px -6px rgba(46,155,224,.45),           /* halo azul de marca */
+      inset 0 1px 1px rgba(255,255,255,.9),         /* brillo superior */
+      inset 0 -18px 30px -18px rgba(10,20,40,.55);  /* profundidad inferior */
+    animation:float 6s ease-in-out infinite;
+    isolation:isolate;
+  }
+  /* Reflejo especular (gloss) arriba a la izquierda */
+  .logo-glass::before{
+    content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
+    background:radial-gradient(60% 45% at 32% 14%, rgba(255,255,255,.85), rgba(255,255,255,0) 70%);
+    mix-blend-mode:screen;opacity:.9;
+  }
+  /* Barrido de luz sutil (sheen) */
+  .logo-glass::after{
+    content:"";position:absolute;inset:-2px;border-radius:50%;pointer-events:none;
+    background:linear-gradient(115deg, transparent 42%, rgba(255,255,255,.35) 50%, transparent 58%);
+    transform:translateX(-30%);opacity:0;animation:sheen 7s ease-in-out infinite;
+  }
+  .logo-glass img{width:100%;height:100%;object-fit:contain;
+    filter:drop-shadow(0 4px 10px rgba(0,0,0,.18));border-radius:50%}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+  @keyframes sheen{0%,72%,100%{opacity:0;transform:translateX(-30%)}80%{opacity:.7}88%{opacity:0;transform:translateX(35%)}}
+  /* ---------- Revelado al hacer scroll ---------- */
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .card{animation:none;opacity:1;transform:none}
+    .logo-glass{animation:none}
+    .logo-glass::after{display:none}
+    .reveal{opacity:1;transform:none;transition:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand reveal">
+    <div class="logo-glass"><img src="/logo.png" alt="Logo de la carrera" /></div>
+  </div>
+  <header class="hero">
+    <div class="eyebrow reveal" id="eyebrow">Fotos oficiales</div>
+    <h1 class="reveal">Busca tu foto<br><span>por tu dorsal</span></h1>
+    <p class="reveal">Escribe el número que llevabas puesto y encuentra todas tus fotos de la carrera.</p>
+  </header>
+  <div class="bib reveal">
+    <i></i>
+    <div class="bib-top"><span id="bibEvent">SD Corre 5K</span><span>DORSAL</span></div>
+    <div class="bib-date" id="bibDate">5 Julio 2026</div>
+    <div class="bib-field">
+      <input id="bibInput" inputmode="numeric" pattern="[0-9]*" placeholder="0000" maxlength="5" autocomplete="off" />
+    </div>
+    <button class="go" id="goBtn">Ver mis fotos</button>
+  </div>
+  <p class="hint reveal">¿No sabes tu número o no aparece? <a href="#" id="seeAll">Ver todas las fotos</a></p>
+  <section id="results"></section>
+  <div class="foot" id="foot"></div>
+</div>
+<div class="lb" id="lb">
+  <button class="x" id="lbClose" aria-label="Cerrar">×</button>
+  <img id="lbImg" alt="Tu foto" />
+  <button class="buy" id="lbBuy">Comprar por WhatsApp</button>
+  <div class="price" id="lbPrice"></div>
+</div>
+<script>
+let CONFIG = { whatsapp:'', price:'5', currency:'USD', eventName:'SD Corre 5K', eventDate:'5 Julio 2026' };
+let currentPhoto = null, currentBib = '', allPage = 0, allMode = false;
+const $ = (id) => document.getElementById(id);
+async function init(){
+  try{
+    CONFIG = await (await fetch('/api/config')).json();
+  }catch(e){}
+  $('eyebrow').textContent = CONFIG.eventName + (CONFIG.eventDate ? ' · ' + CONFIG.eventDate : '');
+  $('bibEvent').textContent = (CONFIG.eventName || 'SD Corre 5K').toUpperCase();
+  if(CONFIG.eventDate) $('bibDate').textContent = CONFIG.eventDate.toUpperCase();
+  $('foot').innerHTML = 'Al comprar recibes tu foto en alta resolución, sin marca de agua, por WhatsApp.';
+}
+init();
+function money(){ return (CONFIG.currency==='USD'?'US$':'') + CONFIG.price + (CONFIG.currency!=='USD'?(' '+CONFIG.currency):''); }
+function cardHTML(p, i){
+  const tag = p.bibs && p.bibs.length ? `<span class="tag">#${p.bibs[0]}</span>` : '';
+  return `<div class="card" style="animation-delay:${Math.min(i*40,600)}ms" data-id="${p.id}" data-preview="${p.preview}">
+    <img loading="lazy" src="${p.thumb}" alt="Foto ${p.bibs&&p.bibs[0]?('dorsal '+p.bibs[0]):''}" />${tag}</div>`;
+}
+function bindCards(){
+  document.querySelectorAll('.card').forEach(c=>{
+    c.onclick=()=>openLightbox(c.dataset.preview, c.dataset.id);
+  });
+}
+async function search(bib){
+  allMode=false; currentBib=bib;
+  const r = $('results');
+  r.innerHTML = `<div class="status"><h2>Buscando…</h2></div>`;
+  try{
+    const data = await (await fetch('/api/photos/search?bib='+encodeURIComponent(bib))).json();
+    if(!data.photos.length){
+      r.innerHTML = `<div class="status"><h2>Dorsal <span class="n">#${bib}</span></h2></div>
+        <div class="empty"><b>Todavía no encontramos fotos con ese número.</b>
+        Puede que el número no se leyera bien en la foto. Revisa todas y busca la tuya.
+        <div style="margin-top:14px"><button class="link-btn" onclick="showAll(true)">Ver todas las fotos</button></div></div>`;
+      return;
+    }
+    r.innerHTML = `<div class="status"><h2><span class="n">${data.photos.length}</span> foto${data.photos.length>1?'s':''} · dorsal #${bib}</h2></div>
+      <div class="grid">${data.photos.map(cardHTML).join('')}</div>`;
+    bindCards();
+  }catch(e){
+    r.innerHTML = `<div class="empty"><b>No se pudo cargar.</b>Revisa tu conexión e intenta de nuevo.</div>`;
+  }
+}
+async function showAll(reset){
+  allMode=true;
+  if(reset){ allPage=0; $('results').innerHTML=`<div class="status"><h2>Todas las fotos</h2></div><div class="grid" id="allGrid"></div>`; }
+  allPage++;
+  try{
+    const data = await (await fetch('/api/photos?page='+allPage+'&limit=24')).json();
+    const g = $('allGrid');
+    g.insertAdjacentHTML('beforeend', data.photos.map(cardHTML).join(''));
+    bindCards();
+    const old=$('moreBtn'); if(old) old.remove();
+    if(allPage < data.pages){
+      g.insertAdjacentHTML('afterend', `<button class="more" id="moreBtn" onclick="showAll(false)">Ver más</button>`);
+    }
+    if(allPage===1 && !data.photos.length){
+      g.innerHTML = `<div class="empty" style="grid-column:1/-1"><b>Aún no hay fotos publicadas.</b>Vuelve en un rato.</div>`;
+    }
+  }catch(e){}
+}
+function openLightbox(preview, id){
+  currentPhoto = id;
+  $('lbImg').src = preview;
+  $('lbPrice').innerHTML = `Foto en alta resolución, sin marca de agua · <b>${money()}</b>`;
+  $('lb').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeLightbox(){ $('lb').classList.remove('open'); document.body.style.overflow=''; }
+$('lbBuy').onclick=()=>{
+  const ev = CONFIG.eventName || 'la carrera';
+  let msg = `Hola! Quiero comprar mi foto de ${ev}.`;
+  if(currentBib) msg += ` Dorsal #${currentBib}.`;
+  msg += ` Foto: ${currentPhoto}`;
+  window.open(`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(msg)}`,'_blank');
+};
+$('goBtn').onclick=()=>{ const v=$('bibInput').value.replace(/\D/g,''); if(v) search(v); };
+$('bibInput').addEventListener('keydown',e=>{ if(e.key==='Enter'){ const v=e.target.value.replace(/\D/g,''); if(v) search(v);} });
+$('bibInput').addEventListener('input',e=>{ e.target.value=e.target.value.replace(/\D/g,''); });
+$('seeAll').onclick=(e)=>{ e.preventDefault(); showAll(true); window.scrollTo({top:document.querySelector('.hint').offsetTop,behavior:'smooth'}); };
+$('lbClose').onclick=closeLightbox;
+$('lb').addEventListener('click',e=>{ if(e.target===$('lb')) closeLightbox(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeLightbox(); });
+// Revelado suave al entrar en pantalla
+const io=new IntersectionObserver((entries)=>{
+  entries.forEach((en,i)=>{ if(en.isIntersecting){ en.target.style.transitionDelay=(i*70)+'ms'; en.target.classList.add('in'); io.unobserve(en.target); } });
+},{threshold:.15,rootMargin:'0px 0px -8% 0px'});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
