@@ -114,8 +114,10 @@
     background:linear-gradient(115deg, transparent 42%, rgba(255,255,255,.35) 50%, transparent 58%);
     transform:translateX(-30%);opacity:0;animation:sheen 7s ease-in-out infinite;
   }
-  .logo-glass img{width:100%;height:100%;object-fit:contain;
-    filter:drop-shadow(0 4px 10px rgba(0,0,0,.18));border-radius:50%}
+  .logo-disc{width:100%;height:100%;border-radius:50%;background:#fff;border:5px solid #23252F;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+    box-shadow:0 4px 10px rgba(0,0,0,.18)}
+  .logo-disc svg{width:74%;height:auto;display:block}
   @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
   @keyframes sheen{0%,72%,100%{opacity:0;transform:translateX(-30%)}80%{opacity:.7}88%{opacity:0;transform:translateX(35%)}}
   /* ---------- Revelado al hacer scroll ---------- */
@@ -133,7 +135,7 @@
 <body>
 <div class="wrap">
   <div class="brand reveal">
-    <div class="logo-glass"><img src="/logo.png" alt="Logo de la carrera" /></div>
+    <div class="logo-glass"><div class="logo-disc" role="img" aria-label="Logo SD Corre"><img src="/logo.svg" alt="Logo SD Corre" style="width:74%;height:auto;display:block" /></div></div>
   </div>
   <header class="hero">
     <div class="eyebrow reveal" id="eyebrow">Fotos oficiales</div>
