@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Panel · Fotos de carrera</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{--ink:#0C1B45;--ink-2:#13285E;--line:rgba(255,255,255,.12);--sun:#2E9BE0;--sky:#8FD0FF;--text:#EDF2FA;--muted:#9AAAC8}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--ink);color:var(--text);font-family:Inter,system-ui,sans-serif;padding:24px 18px 80px}
+  .wrap{max-width:900px;margin:0 auto}
+  h1{font-family:Anton,sans-serif;font-weight:400;text-transform:uppercase;font-size:30px;letter-spacing:.01em;margin-bottom:2px}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:22px}
+  .panel{background:var(--ink-2);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+  label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  input[type=text],input[type=password]{width:100%;background:#0A1735;border:1px solid var(--line);color:var(--text);
+    border-radius:9px;padding:12px 14px;font:inherit;outline:none}
+  input:focus{border-color:var(--sun)}
+  button{cursor:pointer;font:inherit;font-weight:600;border:none;border-radius:9px;padding:12px 16px}
+  .primary{background:var(--sun);color:#fff}
+  .ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px}
+  .stat{background:#0A1735;border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center}
+  .stat b{font-family:Anton,sans-serif;font-weight:400;font-size:28px;display:block;color:var(--sun)}
+  .stat span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  .log{background:#08122B;border:1px solid var(--line);border-radius:9px;padding:12px;font-size:13px;color:var(--sky);
+    min-height:44px;margin-top:12px;white-space:pre-wrap;line-height:1.5}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:14px}
+  .item{background:#0A1735;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .item img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+  .item .b{padding:8px}
+  .item input{font-size:13px;padding:8px}
+  .item small{color:var(--muted);font-size:10px}
+  .hidden{display:none}
+  .savemsg{color:#7CE7A3;font-size:11px;margin-top:4px;height:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Panel de fotos</h1>
+  <div class="sub">Registra las fotos, detecta los dorsales y corrige a mano lo que falte.</div>
+  <div class="panel" id="loginPanel">
+    <label>Clave de admin (ADMIN_TOKEN)</label>
+    <input type="password" id="token" placeholder="Tu clave" />
+    <div style="margin-top:12px"><button class="primary" onclick="login()">Entrar</button></div>
+    <div class="savemsg" id="loginErr" style="color:#FF8A6B"></div>
+  </div>
+  <div id="app" class="hidden">
+    <div class="panel">
+      <div class="row" style="justify-content:space-between">
+        <strong>Estado</strong>
+        <button class="ghost" onclick="loadStats()">Actualizar</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><b id="sTotal">–</b><span>Fotos</span></div>
+        <div class="stat"><b id="sOcr">–</b><span>Sin OCR</span></div>
+        <div class="stat"><b id="sSin">–</b><span>Sin dorsal</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <strong>Paso 1 · Registrar fotos</strong>
+      <div class="sub" style="margin:6px 0 12px">Primero sube tus fotos a Cloudinary (carpeta configurada). Luego pulsa aquí para registrarlas.</div>
+      <button class="primary" id="btnSync" onclick="runSync()">Registrar fotos</button>
+      <div class="log" id="logSync">—</div>
+    </div>
+    <div class="panel">
+      <strong>Paso 2 · Detectar dorsales (OCR)</strong>
+      <div class="sub" style="margin:6px 0 12px">Opcional. Lee el número de cada foto. Puede tardar; ve el progreso abajo.</div>
+      <button class="primary" id="btnOcr" onclick="runOcr()">Detectar dorsales</button>
+      <button class="ghost" id="btnStopOcr" onclick="stopOcr()">Detener</button>
+      <div class="log" id="logOcr">—</div>
+    </div>
+    <div class="panel">
+      <strong>Paso 3 · Corregir a mano</strong>
+      <div class="sub" style="margin:6px 0 12px">Busca por dorsal o deja vacío para ver las últimas. Edita los números separados por coma y guarda.</div>
+      <div class="row">
+        <input type="text" id="findBib" placeholder="Buscar dorsal (opcional)" inputmode="numeric" />
+        <button class="ghost" onclick="loadPhotos()">Buscar</button>
+      </div>
+      <div class="grid" id="photoGrid"></div>
+    </div>
+  </div>
+</div>
+<script>
+let TOKEN='';
+const $=(id)=>document.getElementById(id);
+const H=()=>({'x-admin-token':TOKEN,'Content-Type':'application/json'});
+async function login(){
+  TOKEN=$('token').value.trim();
+  const r=await fetch('/api/admin/stats',{headers:H()});
+  if(r.status===401){ $('loginErr').textContent='Clave incorrecta.'; return; }
+  $('loginPanel').classList.add('hidden'); $('app').classList.remove('hidden');
+  loadStats(); loadPhotos();
+}
+async function loadStats(){
+  const s=await (await fetch('/api/admin/stats',{headers:H()})).json();
+  $('sTotal').textContent=s.total; $('sOcr').textContent=s.sinOcr; $('sSin').textContent=s.sinDorsal;
+}
+async function runSync(){
+  $('btnSync').disabled=true; let cursor=null,nuevas=0,proc=0;
+  do{
+    const url='/api/admin/sync'+(cursor?('?cursor='+encodeURIComponent(cursor)):'');
+    const d=await (await fetch(url,{method:'POST',headers:H()})).json();
+    if(d.error){ $('logSync').textContent='Error: '+d.error; break; }
+    nuevas+=d.nuevas; proc+=d.procesadas; cursor=d.next_cursor;
+    $('logSync').textContent=`Registradas ${proc} · nuevas ${nuevas} · total ${d.total}`+(cursor?' · continuando…':' ✓ listo');
+  }while(cursor);
+  $('btnSync').disabled=false; loadStats();
+}
+let ocrStop=false;
+async function runOcr(){
+  ocrStop=false; $('btnOcr').disabled=true; let hechas=0,conD=0;
+  while(!ocrStop){
+    const d=await (await fetch('/api/admin/ocr?batch=8',{method:'POST',headers:H()})).json();
+    if(d.error){ $('logOcr').textContent='Error: '+d.error; break; }
+    hechas+=d.procesadas; conD+=d.conDorsal;
+    $('logOcr').textContent=`Procesadas ${hechas} · con dorsal ${conD} · faltan ${d.faltan}`;
+    if(d.procesadas===0 || d.faltan===0){ $('logOcr').textContent+='  ✓ listo'; break; }
+  }
+  $('btnOcr').disabled=false; loadStats(); loadPhotos();
+}
+function stopOcr(){ ocrStop=true; $('logOcr').textContent+='  · detenido'; }
+async function loadPhotos(){
+  const q=$('findBib').value.replace(/\D/g,'');
+  const d=await (await fetch('/api/admin/photos'+(q?('?bib='+q):''),{headers:H()})).json();
+  $('photoGrid').innerHTML=d.photos.map(p=>`
+    <div class="item">
+      <img src="${p.thumb}" />
+      <div class="b">
+        <label>Dorsales</label>
+        <input type="text" value="${(p.bibs||[]).join(', ')}" id="in_${btoa(p.id).replace(/=/g,'')}" />
+        <button class="primary" style="width:100%;margin-top:6px;padding:8px" onclick="saveTag('${p.id}')">Guardar</button>
+        <div class="savemsg" id="msg_${btoa(p.id).replace(/=/g,'')}"></div>
+      </div>
+    </div>`).join('') || '<div class="sub">Sin resultados.</div>';
+}
+async function saveTag(id){
+  const key=btoa(id).replace(/=/g,'');
+  const val=$('in_'+key).value.split(',').map(s=>s.replace(/\D/g,'')).filter(Boolean);
+  const d=await (await fetch('/api/admin/tag',{method:'POST',headers:H(),body:JSON.stringify({publicId:id,bibs:val})})).json();
+  $('msg_'+key).textContent=d.ok?'Guardado ✓':(d.error||'Error');
+  setTimeout(()=>{$('msg_'+key).textContent='';},2000);
+}
+$('token').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
+</script>
+</body>
+</html>
